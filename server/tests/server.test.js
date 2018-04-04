@@ -109,3 +109,28 @@ describe('GET /todos/:id', function(){
       .end(done)
   });
 });
+
+describe('DELETE /todos/:id', function(){
+  it('should remove a todo', function(done){
+    var hexId = todos[0]._id.toHexString();
+    console.log(hexId);
+
+    request(app)
+      .delete(`/todos/${hexId}`)
+      .expect(200)
+      .expect(function(res){
+        expect(res.body.todo._id).toBe(hexId);
+      })
+      .end(function(err, res){
+        if(err){
+          return done(err);
+        }
+        Todo.findById(hexId).then(function(todo){
+          expect(todo).toBeFalsy();
+          done();
+        }).catch(function(e){
+          done(e);
+        })
+      })
+  })
+})
