@@ -37,8 +37,8 @@ UserSchema.methods.toJSON = function(){
   //console.log(`This is user: ${user}`)
   //var userObject = user.toObject();
   //console.log(`This is userObject: ${userObject}`);
-
   return _.pick(user, ['_id', 'email']);
+
 };
 
 UserSchema.methods.generateAuthToken = function(){
@@ -47,10 +47,31 @@ UserSchema.methods.generateAuthToken = function(){
   var token = jwt.sign({_id: user._id.toHexString(), access: access}, 'abc123').toString();
 
   user.tokens = user.tokens.concat([{access, token}]);
-
+  console.log('Above to run return command from method generateAuthToken')
   return user.save().then(function(){
+    console.log('About to return the token')
     return token;
   });
+};
+
+UserSchema.statics.findByToken = function(token){
+  var User = this;
+  var decoded;
+
+  try {
+    decoded = jwt.verify(token, 'abc123');
+  } catch(e){
+    // return new Promise(function(resolve, reject){
+    //   reject();
+    // })
+    return Promise.reject();
+  }
+
+  return User.findOne({
+    '_id': decoded._id,
+    'tokens.token': token,
+    'tokens.access': 'auth'
+  })
 };
 
 var User = mongoose.model('User', UserSchema);

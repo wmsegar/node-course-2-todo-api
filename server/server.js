@@ -8,6 +8,7 @@ var {ObjectID} = require('mongodb');
 var mongoose = require('./db/mongoose');
 var {User} = require('./models/user');
 var {Todo} = require('./models/todo');
+var {authenticate} = require('./middleware/authenticate');
 
 var app = express();
 const port = process.env.PORT
@@ -96,17 +97,20 @@ app.post('/users', function(req, res){
   var body = _.pick(req.body, ['email', 'password']);
   var user = new User(body);
 
-
-
   user.save().then(function(){
+    console.log('calling function to generate Auth Token')
     return user.generateAuthToken();
   }).then(function(token){
+    console.log('Got the token back')
     res.header('x-auth', token).send(user);
   }).catch(function(e){
     res.status(400).send(e);
-  })
+  });
+});
 
-})
+app.get('/users/me', authenticate, function (req, res){
+  res.send(req.user);
+});
 
 app.listen(port, function(){
   console.log(`Started on port: ${port}`);
